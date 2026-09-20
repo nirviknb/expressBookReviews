@@ -56,27 +56,37 @@ public_users.get('/isbn/:isbn', async function (req, res) {
   });
   
 // Get book details based on author
-public_users.get('/author/:author',function (req, res) {
-  const author = req.params.author;
-  const keys = Object.keys(books);
-  const booksByAuthor = [];
-
-  keys.forEach((key) => {
-    if (books[key].author === author) {
-      booksByAuthor.push({
-        isbn: key,
-        title: books[key].title,
-        reviews: books[key].reviews
+// Get book details based on author using async-await and Promises
+public_users.get('/author/:author', async function (req, res) {
+    const author = req.params.author;
+  
+    try {
+      const getBooksByAuthor = await new Promise((resolve, reject) => {
+        const keys = Object.keys(books);
+        const booksByAuthor = [];
+  
+        keys.forEach((key) => {
+          if (books[key].author === author) {
+            booksByAuthor.push({
+              isbn: key,
+              title: books[key].title,
+              reviews: books[key].reviews
+            });
+          }
+        });
+  
+        if (booksByAuthor.length > 0) {
+          resolve(booksByAuthor);
+        } else {
+          reject({status: 404, message: "No books found by this author"});
+        }
       });
+  
+      return res.status(200).json({booksbyauthor: getBooksByAuthor});
+    } catch (error) {
+      return res.status(error.status || 500).json({message: error.message});
     }
   });
-
-  if (booksByAuthor.length > 0) {
-    return res.status(200).json({booksbyauthor: booksByAuthor});
-  } else {
-    return res.status(404).json({message: "No books found by this author"});
-  }
-});
 
 // Get all books based on title
 public_users.get('/title/:title',function (req, res) {
